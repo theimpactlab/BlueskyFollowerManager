@@ -29,11 +29,11 @@ export default function LoginForm() {
         router.refresh()
       } else {
         console.error('Login failed:', data.error)
-        setError(data.error || 'Login failed')
+        setError(data.error || 'Login failed. Please check your credentials and try again.')
       }
     } catch (error) {
       console.error('Login error:', error)
-      setError('An unexpected error occurred')
+      setError('An unexpected error occurred. Please try again later.')
     } finally {
       setIsLoading(false)
     }
