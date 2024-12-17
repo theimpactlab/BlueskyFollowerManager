@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { cookies, ResponseCookies } from 'next/headers'
+import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'edge'
@@ -20,8 +20,8 @@ export async function POST(request: Request) {
   }
 
   // Set a session cookie
-  const cookieStore = cookies()
-  cookieStore.set('session', 'authenticated', { httpOnly: true })
+  const response = NextResponse.json({ message: 'Login successful' })
+  response.cookies.set('session', 'authenticated', { httpOnly: true })
 
-  return NextResponse.json({ message: 'Login successful' })
+  return response
 }
