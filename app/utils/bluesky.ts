@@ -1,4 +1,4 @@
-import { BskyAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
+import { BskyAgent } from '@atproto/api'
 
 export async function authenticateBluesky(handle: string, appPassword: string) {
   const agent = new BskyAgent({ service: 'https://bsky.social' })
