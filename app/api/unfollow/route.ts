@@ -10,6 +10,7 @@ const createSupabaseClient = () => {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing Supabase environment variables:', { supabaseUrl, supabaseAnonKey })
     throw new Error('Missing Supabase environment variables')
   }
 
@@ -20,11 +21,14 @@ const createSupabaseClient = () => {
 
 export async function POST() {
   try {
+    console.log('Starting unfollow process')
     const supabase = createSupabaseClient()
+    console.log('Supabase client created successfully')
 
     const cookieStore = cookies()
     const session = cookieStore.get('session')
     if (!session || session.value !== 'authenticated') {
+      console.log('Unauthorized access attempt')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -34,14 +38,31 @@ export async function POST() {
       .select('handle, app_password')
       .single()
 
-    if (userError || !userData) {
+    if (userError) {
+      console.error('Failed to retrieve user data:', userError)
       return NextResponse.json({ error: 'Failed to retrieve user data' }, { status: 500 })
     }
 
+    if (!userData) {
+      console.error('No user data found')
+      return NextResponse.json({ error: 'No user data found' }, { status: 404 })
+    }
+
+    console.log('User data retrieved successfully')
+
     const agent = await authenticateBluesky(userData.handle, userData.app_password)
-    const { data: followedAccounts } = await supabase
+    console.log('Authenticated with Bluesky')
+
+    const { data: followedAccounts, error: followedAccountsError } = await supabase
       .from('followed_accounts')
       .select('user_did, follow_record_uri')
+
+    if (followedAccountsError) {
+      console.error('Failed to retrieve followed accounts:', followedAccountsError)
+      return NextResponse.json({ error: 'Failed to retrieve followed accounts' }, { status: 500 })
+    }
+
+    console.log(`Retrieved ${followedAccounts?.length || 0} followed accounts`)
 
     if (followedAccounts && followedAccounts.length > 0) {
       for (const account of followedAccounts) {
@@ -54,10 +75,11 @@ export async function POST() {
       }
     }
 
+    console.log('Unfollow process completed successfully')
     return NextResponse.json({ message: 'Unfollow process completed successfully' })
   } catch (error) {
     console.error('Unfollow process failed:', error)
-    return NextResponse.json({ error: 'Unfollow process failed' }, { status: 500 })
+    return NextResponse.json({ error: 'Unfollow process failed', details: error.message }, { status: 500 })
   }
 }
 
