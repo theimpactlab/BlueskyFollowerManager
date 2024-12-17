@@ -1,4 +1,4 @@
-import { BskyAgent } from '@atproto/api'
+import { BskyAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
 
 export async function authenticateBluesky(handle: string, appPassword: string) {
   const agent = new BskyAgent({ service: 'https://bsky.social' })
@@ -7,8 +7,8 @@ export async function authenticateBluesky(handle: string, appPassword: string) {
 }
 
 export async function getFollowers(agent: BskyAgent, actor: string) {
-  let followers = []
-  let cursor
+  let followers: any[] = []
+  let cursor: string | undefined
   do {
     const response = await agent.getFollowers({ actor, cursor, limit: 100 })
     followers = followers.concat(response.data.followers)
