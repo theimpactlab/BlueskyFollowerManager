@@ -4,7 +4,8 @@ import { cookies } from 'next/headers'
 export const runtime = 'edge'
 
 export async function GET() {
-  const session = cookies().get('session')
+  const cookieStore = cookies()
+  const session = cookieStore.get('session')
   if (session && session.value === 'authenticated') {
     return NextResponse.json({ isLoggedIn: true })
   }
