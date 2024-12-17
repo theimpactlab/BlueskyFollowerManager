@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
+import { authenticateBluesky } from '../../utils/bluesky'
 
 export const runtime = 'edge'
 
 const createSupabaseClient = () => {
-  const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Missing Supabase environment variables:', { supabaseUrl: !!supabaseUrl, supabaseAnonKey: !!supabaseAnonKey })
@@ -27,7 +28,16 @@ export async function POST(request: Request) {
     const { handle, appPassword } = await request.json()
     console.log('Received login request for handle:', handle)
 
-    // Store credentials in Supabase
+    // Authenticate with Bluesky first
+    try {
+      await authenticateBluesky(handle, appPassword)
+      console.log('Bluesky authentication successful')
+    } catch (error) {
+      console.error('Bluesky authentication failed:', error)
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+    }
+
+    // If Bluesky auth is successful, store credentials in Supabase
     const { data, error } = await supabase
       .from('users')
       .upsert({ handle, app_password: appPassword })
